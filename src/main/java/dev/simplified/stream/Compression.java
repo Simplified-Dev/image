@@ -1,5 +1,6 @@
 package dev.sbs.api.io.stream;
 
+import dev.sbs.api.io.exception.CompressionException;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.jetbrains.annotations.NotNull;
@@ -174,9 +175,9 @@ public enum Compression {
 	 *
 	 * @param inputStream the input stream to examine
 	 * @return the detected compression type, or {@link #NONE} if no compression is detected
-	 * @throws IOException if an I/O error occurs
+	 * @throws CompressionException if an I/O error occurs
 	 */
-	public static @NotNull Compression getType(@NotNull InputStream inputStream) throws IOException {
+	public static @NotNull Compression getType(@NotNull InputStream inputStream) throws CompressionException {
 		// Ensure the stream supports marking
 		if (!inputStream.markSupported())
 			inputStream = new BufferedInputStream(inputStream);
@@ -188,17 +189,21 @@ public enum Compression {
 				maxLength = compression.magicBytes.length;
 		}
 
-		// Read the magic bytes
-		inputStream.mark(maxLength);
-		byte[] buffer = new byte[maxLength];
-		int bytesRead = inputStream.read(buffer, 0, maxLength);
-		inputStream.reset();
+		try {
+			// Read the magic bytes
+			inputStream.mark(maxLength);
+			byte[] buffer = new byte[maxLength];
+			int bytesRead = inputStream.read(buffer, 0, maxLength);
+			inputStream.reset();
 
-		// If we couldn't read enough bytes, return NONE
-		if (bytesRead <= 0)
-			return NONE;
+			// If we couldn't read enough bytes, return NONE
+			if (bytesRead <= 0)
+				return NONE;
 
-		return getType(buffer);
+			return getType(buffer);
+		} catch (IOException ioex) {
+			throw new CompressionException(ioex);
+		}
 	}
 
 	/**
@@ -207,10 +212,10 @@ public enum Compression {
 	 *
 	 * @param data the potentially compressed data
 	 * @return decompressed data or original if not compressed
-	 * @throws IOException if decompression fails
+	 * @throws CompressionException if an I/O error occurs
 	 * @throws UnsupportedOperationException if the detected compression format is not supported
 	 */
-	public static byte[] decompress(byte[] data) throws IOException {
+	public static byte[] decompress(byte[] data) throws CompressionException {
 		Compression type = getType(data);
 
 		if (type == NONE)
@@ -225,6 +230,8 @@ public enum Compression {
 				out.write(buffer, 0, length);
 
 			return out.toByteArray();
+		} catch (IOException ioex) {
+			throw new CompressionException(ioex);
 		}
 	}
 
@@ -233,18 +240,21 @@ public enum Compression {
 	 *
 	 * @param inputStream the input stream to wrap
 	 * @return a decompression stream, or the original stream if no compression is detected
-	 * @throws IOException if an I/O error occurs
+	 * @throws CompressionException if an I/O error occurs
 	 * @throws UnsupportedOperationException if the detected compression format is not supported
 	 * @apiNote Only GZIP and ZLIB are supported in the standard Java library. Other formats require
 	 * additional dependencies.
 	 */
-	public static @NotNull InputStream wrap(@NotNull InputStream inputStream) throws IOException {
-		return switch (Compression.getType(inputStream)) {
-			case GZIP -> new GZIPInputStream(inputStream, 65536);
-			case ZLIB -> new InflaterInputStream(inputStream);
-			case BZIP2, XZ, LZ4, ZSTD, ZIP, SEVENZ, LZIP, LZFSE, RAR ->
-				throw new UnsupportedOperationException("Compression format not supported without additional libraries");
-			default -> inputStream;
-		};
+	public static @NotNull InputStream wrap(@NotNull InputStream inputStream) throws CompressionException {
+		try {
+			return switch (Compression.getType(inputStream)) {
+				case GZIP -> new GZIPInputStream(inputStream, 65536);
+				case ZLIB -> new InflaterInputStream(inputStream);
+				case BZIP2, XZ, LZ4, ZSTD, ZIP, SEVENZ, LZIP, LZFSE, RAR -> throw new UnsupportedOperationException("Compression format not supported without additional libraries");
+				default -> inputStream;
+			};
+		} catch (IOException ioex) {
+			throw new CompressionException(ioex);
+		}
 	}
 }
