@@ -2,7 +2,6 @@ package dev.sbs.api.io.stream;
 
 import org.jetbrains.annotations.NotNull;
 
-import java.io.DataInput;
 import java.io.DataInputStream;
 
 /**
@@ -13,7 +12,7 @@ import java.io.DataInputStream;
  * IllegalStateException} to signify <i>programmer error</i>. This behavior is a technical violation
  * of the supertype's contract, which specifies a checked exception.
  */
-public class ByteArrayDataInput extends DataInputStream implements DataInput {
+public class ByteArrayDataInput extends DataInputStream {
 
     public ByteArrayDataInput(byte[] bytes) {
         this(new java.io.ByteArrayInputStream(bytes));
