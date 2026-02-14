@@ -1,6 +1,7 @@
 package dev.sbs.api.io.stream;
 
 import dev.sbs.api.io.exception.CompressionException;
+import lombok.Cleanup;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.jetbrains.annotations.NotNull;
@@ -8,6 +9,7 @@ import org.jetbrains.annotations.NotNull;
 import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.zip.DeflaterOutputStream;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
@@ -201,8 +203,37 @@ public enum Compression {
 				return NONE;
 
 			return getType(buffer);
-		} catch (IOException ioex) {
-			throw new CompressionException(ioex);
+		} catch (IOException exception) {
+			throw new CompressionException(exception);
+		}
+	}
+
+	/**
+	 * Compresses a byte array using the specified compression algorithm.
+	 *
+	 * @param data the uncompressed data
+	 * @param compression the compression algorithm to use
+	 * @return the compressed data
+	 * @throws CompressionException if an I/O error occurs
+	 */
+	public static byte[] compress(byte[] data, @NotNull Compression compression) throws CompressionException {
+		if (compression == NONE)
+			return data;
+
+		try {
+			@Cleanup ByteArrayDataOutput output = new ByteArrayDataOutput();
+			@Cleanup OutputStream compressedOutput = switch (compression) {
+				case GZIP -> new GZIPOutputStream(output);
+				case ZLIB -> new DeflaterOutputStream(output);
+				default -> throw new UnsupportedOperationException("Compression format " + compression + " is not supported");
+			};
+
+			compressedOutput.write(data);
+			compressedOutput.flush();
+			compressedOutput.close(); // Close the compressor stream to finish the compression
+			return output.toByteArray();
+		} catch (IOException exception) {
+			throw new CompressionException(exception);
 		}
 	}
 
@@ -230,8 +261,8 @@ public enum Compression {
 				out.write(buffer, 0, length);
 
 			return out.toByteArray();
-		} catch (IOException ioex) {
-			throw new CompressionException(ioex);
+		} catch (IOException exception) {
+			throw new CompressionException(exception);
 		}
 	}
 
@@ -247,14 +278,18 @@ public enum Compression {
 	 */
 	public static @NotNull InputStream wrap(@NotNull InputStream inputStream) throws CompressionException {
 		try {
-			return switch (Compression.getType(inputStream)) {
+			Compression compression = Compression.getType(inputStream);
+
+			if (compression == NONE)
+				return inputStream;
+
+			return switch (compression) {
 				case GZIP -> new GZIPInputStream(inputStream, 65536);
 				case ZLIB -> new InflaterInputStream(inputStream);
-				case BZIP2, XZ, LZ4, ZSTD, ZIP, SEVENZ, LZIP, LZFSE, RAR -> throw new UnsupportedOperationException("Compression format not supported without additional libraries");
-				default -> inputStream;
+				default -> throw new UnsupportedOperationException("Compression format " + compression + " is not supported without additional libraries");
 			};
-		} catch (IOException ioex) {
-			throw new CompressionException(ioex);
+		} catch (IOException exception) {
+			throw new CompressionException(exception);
 		}
 	}
 }
