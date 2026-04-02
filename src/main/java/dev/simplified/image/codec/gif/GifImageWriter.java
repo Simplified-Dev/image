@@ -4,7 +4,6 @@ import dev.sbs.api.io.image.AnimatedImageData;
 import dev.sbs.api.io.image.ImageData;
 import dev.sbs.api.io.image.ImageFormat;
 import dev.sbs.api.io.image.ImageFrame;
-import dev.sbs.api.io.image.ImageFrame.FrameDisposal;
 import dev.sbs.api.io.image.codec.ImageWriteOptions;
 import dev.sbs.api.io.image.codec.ImageWriter;
 import dev.sbs.api.io.stream.ByteArrayDataOutput;
@@ -96,7 +95,7 @@ public class GifImageWriter implements ImageWriter {
         IIOMetadataNode root = (IIOMetadataNode) metadata.getAsTree(formatName);
 
         IIOMetadataNode gce = getOrCreateNode(root, "GraphicControlExtension");
-        gce.setAttribute("disposalMethod", toGifDisposal(frame.getDisposal()));
+        gce.setAttribute("disposalMethod", frame.getDisposal().getMethod());
         gce.setAttribute("userInputFlag", "FALSE");
         gce.setAttribute("transparentColorFlag", String.valueOf(transparent));
         gce.setAttribute("delayTime", Integer.toString(Math.max(1, frame.getDelayMs() / 10)));
@@ -133,15 +132,6 @@ public class GifImageWriter implements ImageWriter {
         IIOMetadataNode node = new IIOMetadataNode(name);
         root.appendChild(node);
         return node;
-    }
-
-    private static @NotNull String toGifDisposal(@NotNull FrameDisposal disposal) {
-        return switch (disposal) {
-            case DO_NOT_DISPOSE -> "doNotDispose";
-            case RESTORE_TO_BACKGROUND -> "restoreToBackgroundColor";
-            case RESTORE_TO_PREVIOUS -> "restoreToPrevious";
-            default -> "none";
-        };
     }
 
 }
