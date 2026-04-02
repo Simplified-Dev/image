@@ -12,6 +12,7 @@ import dev.sbs.api.io.image.StaticImageData;
 import dev.sbs.api.io.image.codec.ImageReadOptions;
 import dev.sbs.api.io.image.codec.ImageReader;
 import dev.sbs.api.io.image.exception.ImageDecodeException;
+import dev.sbs.api.util.StringUtil;
 import lombok.Cleanup;
 import lombok.SneakyThrows;
 import org.jetbrains.annotations.NotNull;
@@ -72,12 +73,12 @@ public class GifImageReader implements ImageReader {
                 IIOMetadataNode gce = findNode(root, "GraphicControlExtension");
                 if (gce != null) {
                     String delayAttr = gce.getAttribute("delayTime");
-                    if (delayAttr != null && !delayAttr.isEmpty())
+                    if (StringUtil.isNotEmpty(delayAttr))
                         delayMs = Math.max(10, Integer.parseInt(delayAttr)) * 10;
 
                     String disposalAttr = gce.getAttribute("disposalMethod");
-                    if (disposalAttr != null)
-                        disposal = parseDisposal(disposalAttr);
+                    if (StringUtil.isNotEmpty(disposalAttr))
+                        disposal = FrameDisposal.of(disposalAttr);
                 }
 
                 // Extract ImageDescriptor for offsets
@@ -85,8 +86,8 @@ public class GifImageReader implements ImageReader {
                 if (desc != null) {
                     String leftAttr = desc.getAttribute("imageLeftPosition");
                     String topAttr = desc.getAttribute("imageTopPosition");
-                    if (leftAttr != null && !leftAttr.isEmpty()) offsetX = Integer.parseInt(leftAttr);
-                    if (topAttr != null && !topAttr.isEmpty()) offsetY = Integer.parseInt(topAttr);
+                    if (StringUtil.isNotEmpty(leftAttr)) offsetX = Integer.parseInt(leftAttr);
+                    if (StringUtil.isNotEmpty(topAttr)) offsetY = Integer.parseInt(topAttr);
                 }
 
                 // Extract loop count from NETSCAPE2.0 extension (first frame only)
@@ -118,15 +119,6 @@ public class GifImageReader implements ImageReader {
         }
 
         return null;
-    }
-
-    private static @NotNull FrameDisposal parseDisposal(@NotNull String value) {
-        return switch (value) {
-            case "doNotDispose" -> FrameDisposal.DO_NOT_DISPOSE;
-            case "restoreToBackgroundColor" -> FrameDisposal.RESTORE_TO_BACKGROUND;
-            case "restoreToPrevious" -> FrameDisposal.RESTORE_TO_PREVIOUS;
-            default -> FrameDisposal.NONE;
-        };
     }
 
     private static int parseLoopCount(@NotNull IIOMetadataNode appExts) {
