@@ -1,0 +1,50 @@
+package dev.sbs.api.io.image;
+
+import dev.sbs.api.collection.concurrent.Concurrent;
+import dev.sbs.api.collection.concurrent.ConcurrentList;
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+import org.jetbrains.annotations.NotNull;
+
+import java.awt.image.BufferedImage;
+
+/**
+ * A single-frame image.
+ */
+@Getter
+@RequiredArgsConstructor(access = AccessLevel.PRIVATE)
+public class StaticImageData implements ImageData {
+
+    private final int width;
+    private final int height;
+    @Getter(AccessLevel.NONE)
+    private final boolean alpha;
+    private final @NotNull ConcurrentList<ImageFrame> frames;
+
+    /**
+     * Wraps a {@link BufferedImage} as static image data.
+     *
+     * @param image the source image
+     * @return a new static image data instance
+     */
+    public static @NotNull StaticImageData of(@NotNull BufferedImage image) {
+        boolean alpha = image.getColorModel().hasAlpha();
+        ImageFrame frame = ImageFrame.of(image, 0);
+        ConcurrentList<ImageFrame> frames = Concurrent.newList();
+        frames.add(frame);
+
+        return new StaticImageData(image.getWidth(), image.getHeight(), alpha, frames);
+    }
+
+    @Override
+    public boolean hasAlpha() {
+        return this.alpha;
+    }
+
+    @Override
+    public boolean isAnimated() {
+        return false;
+    }
+
+}

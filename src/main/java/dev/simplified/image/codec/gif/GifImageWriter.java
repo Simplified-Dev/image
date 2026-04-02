@@ -1,0 +1,147 @@
+package dev.sbs.api.io.image.codec.gif;
+
+import dev.sbs.api.io.image.AnimatedImageData;
+import dev.sbs.api.io.image.ImageData;
+import dev.sbs.api.io.image.ImageFormat;
+import dev.sbs.api.io.image.ImageFrame;
+import dev.sbs.api.io.image.ImageFrame.FrameDisposal;
+import dev.sbs.api.io.image.codec.ImageWriteOptions;
+import dev.sbs.api.io.image.codec.ImageWriter;
+import dev.sbs.api.io.stream.ByteArrayDataOutput;
+import lombok.Cleanup;
+import lombok.SneakyThrows;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
+import javax.imageio.IIOImage;
+import javax.imageio.ImageIO;
+import javax.imageio.ImageTypeSpecifier;
+import javax.imageio.ImageWriteParam;
+import javax.imageio.metadata.IIOMetadata;
+import javax.imageio.metadata.IIOMetadataNode;
+import javax.imageio.stream.ImageOutputStream;
+import java.awt.image.BufferedImage;
+
+/**
+ * Writes GIF images (static and animated) via {@link ImageIO}, configuring
+ * per-frame disposal, delay, and loop count metadata.
+ */
+public class GifImageWriter implements ImageWriter {
+
+    @Override
+    public @NotNull ImageFormat getFormat() {
+        return ImageFormat.GIF;
+    }
+
+    @Override
+    @SneakyThrows
+    public byte @NotNull [] write(@NotNull ImageData data, @Nullable ImageWriteOptions options) {
+        int loopCount = 0;
+        boolean transparent = false;
+        int transparentColorIndex = 0;
+
+        if (options instanceof GifWriteOptions gifOptions) {
+            loopCount = gifOptions.getLoopCount();
+            transparent = gifOptions.isTransparent();
+            transparentColorIndex = gifOptions.getTransparentColorIndex();
+        } else if (data instanceof AnimatedImageData animated) {
+            loopCount = animated.getLoopCount();
+        }
+
+        javax.imageio.ImageWriter writer = ImageIO.getImageWritersByFormatName("gif").next();
+        @Cleanup ByteArrayDataOutput dataOutput = new ByteArrayDataOutput();
+        @Cleanup ImageOutputStream outputStream = ImageIO.createImageOutputStream(dataOutput);
+        writer.setOutput(outputStream);
+
+        ImageWriteParam param = writer.getDefaultWriteParam();
+        ImageTypeSpecifier specifier = ImageTypeSpecifier.createFromBufferedImageType(BufferedImage.TYPE_BYTE_INDEXED);
+
+        if (data.isAnimated()) {
+            writer.prepareWriteSequence(null);
+            boolean firstFrame = true;
+
+            for (ImageFrame frame : data.getFrames()) {
+                IIOMetadata metadata = writer.getDefaultImageMetadata(specifier, param);
+                configureFrameMetadata(metadata, frame, transparent, transparentColorIndex);
+
+                if (firstFrame) {
+                    configureLoopMetadata(metadata, loopCount);
+                    firstFrame = false;
+                }
+
+                writer.writeToSequence(new IIOImage(frame.getImage(), null, metadata), param);
+            }
+
+            writer.endWriteSequence();
+        } else {
+            ImageFrame frame = data.getFrames().getFirst();
+            IIOMetadata metadata = writer.getDefaultImageMetadata(specifier, param);
+            configureFrameMetadata(metadata, frame, transparent, transparentColorIndex);
+            writer.write(new IIOImage(frame.getImage(), null, metadata));
+        }
+
+        writer.dispose();
+        outputStream.flush();
+        return dataOutput.toByteArray();
+    }
+
+    @SneakyThrows
+    private static void configureFrameMetadata(
+        @NotNull IIOMetadata metadata,
+        @NotNull ImageFrame frame,
+        boolean transparent,
+        int transparentColorIndex
+    ) {
+        String formatName = metadata.getNativeMetadataFormatName();
+        IIOMetadataNode root = (IIOMetadataNode) metadata.getAsTree(formatName);
+
+        IIOMetadataNode gce = getOrCreateNode(root, "GraphicControlExtension");
+        gce.setAttribute("disposalMethod", toGifDisposal(frame.getDisposal()));
+        gce.setAttribute("userInputFlag", "FALSE");
+        gce.setAttribute("transparentColorFlag", String.valueOf(transparent));
+        gce.setAttribute("delayTime", Integer.toString(Math.max(1, frame.getDelayMs() / 10)));
+        gce.setAttribute("transparentColorIndex", Integer.toString(transparentColorIndex));
+
+        metadata.setFromTree(formatName, root);
+    }
+
+    @SneakyThrows
+    private static void configureLoopMetadata(@NotNull IIOMetadata metadata, int loopCount) {
+        String formatName = metadata.getNativeMetadataFormatName();
+        IIOMetadataNode root = (IIOMetadataNode) metadata.getAsTree(formatName);
+
+        IIOMetadataNode appExts = getOrCreateNode(root, "ApplicationExtensions");
+        IIOMetadataNode netscape = new IIOMetadataNode("ApplicationExtension");
+        netscape.setAttribute("applicationID", "NETSCAPE");
+        netscape.setAttribute("authenticationCode", "2.0");
+        netscape.setUserObject(new byte[] {
+            0x1,
+            (byte) (loopCount & 0xFF),
+            (byte) ((loopCount >> 8) & 0xFF)
+        });
+        appExts.appendChild(netscape);
+
+        metadata.setFromTree(formatName, root);
+    }
+
+    private static @NotNull IIOMetadataNode getOrCreateNode(@NotNull IIOMetadataNode root, @NotNull String name) {
+        for (int i = 0; i < root.getLength(); i++) {
+            if (root.item(i).getNodeName().equalsIgnoreCase(name))
+                return (IIOMetadataNode) root.item(i);
+        }
+
+        IIOMetadataNode node = new IIOMetadataNode(name);
+        root.appendChild(node);
+        return node;
+    }
+
+    private static @NotNull String toGifDisposal(@NotNull FrameDisposal disposal) {
+        return switch (disposal) {
+            case DO_NOT_DISPOSE -> "doNotDispose";
+            case RESTORE_TO_BACKGROUND -> "restoreToBackgroundColor";
+            case RESTORE_TO_PREVIOUS -> "restoreToPrevious";
+            default -> "none";
+        };
+    }
+
+}
