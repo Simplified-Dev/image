@@ -63,15 +63,16 @@ public class ImageFrame {
     public enum FrameDisposal {
 
         /** No disposal action specified. */
-        NONE(0),
+        NONE(0, "none"),
         /** Leave the canvas as-is after displaying this frame. */
-        DO_NOT_DISPOSE(1),
+        DO_NOT_DISPOSE(1, "doNotDispose"),
         /** Restore the canvas to the background color. */
-        RESTORE_TO_BACKGROUND(2),
+        RESTORE_TO_BACKGROUND(2, "restoreToBackgroundColor"),
         /** Restore the canvas to its state before this frame was rendered. */
-        RESTORE_TO_PREVIOUS(3);
+        RESTORE_TO_PREVIOUS(3, "restoreToPrevious");
 
         private final int value;
+        private final @NotNull String method;
 
         /**
          * Returns the disposal method for the given numeric value.
@@ -82,6 +83,19 @@ public class ImageFrame {
         public static @NotNull FrameDisposal of(int value) {
             return Arrays.stream(values())
                 .filter(disposal -> disposal.getValue() == value)
+                .findFirst()
+                .orElse(NONE);
+        }
+
+        /**
+         * Returns the disposal method for the given string value.
+         *
+         * @param value the disposal method identifier
+         * @return the matching disposal method, or {@link #NONE} if unrecognized
+         */
+        public static @NotNull FrameDisposal of(@NotNull String value) {
+            return Arrays.stream(values())
+                .filter(disposal -> disposal.getMethod().equalsIgnoreCase(value))
                 .findFirst()
                 .orElse(NONE);
         }
