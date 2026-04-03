@@ -5,6 +5,7 @@ import dev.sbs.api.collection.concurrent.ConcurrentList;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import lombok.experimental.Accessors;
 import org.jetbrains.annotations.NotNull;
 
 import java.awt.image.BufferedImage;
@@ -18,8 +19,8 @@ public class StaticImageData implements ImageData {
 
     private final int width;
     private final int height;
-    @Getter(AccessLevel.NONE)
-    private final boolean alpha;
+    @Accessors(fluent = true)
+    private final boolean hasAlpha;
     private final @NotNull ConcurrentList<ImageFrame> frames;
 
     /**
@@ -35,11 +36,6 @@ public class StaticImageData implements ImageData {
         frames.add(frame);
 
         return new StaticImageData(image.getWidth(), image.getHeight(), alpha, frames);
-    }
-
-    @Override
-    public boolean hasAlpha() {
-        return this.alpha;
     }
 
     @Override

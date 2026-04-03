@@ -7,6 +7,7 @@ import dev.sbs.api.util.builder.ClassBuilder;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import lombok.experimental.Accessors;
 import org.jetbrains.annotations.NotNull;
 
 /**
@@ -16,22 +17,78 @@ import org.jetbrains.annotations.NotNull;
 @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
 public class AnimatedImageData implements ImageData {
 
+    private static final int MIN_FRAME_DURATION_MS = 50;
+
     private final int width;
     private final int height;
-    @Getter(AccessLevel.NONE)
-    private final boolean alpha;
+    @Accessors(fluent = true)
+    private final boolean hasAlpha;
     private final @NotNull ConcurrentList<ImageFrame> frames;
     private final int loopCount;
     private final int backgroundColor;
-
-    @Override
-    public boolean hasAlpha() {
-        return this.alpha;
-    }
+    private final int totalDurationMs;
 
     @Override
     public boolean isAnimated() {
         return true;
+    }
+
+    /**
+     * Resolves the frame that should be displayed at the given elapsed time.
+     * <p>
+     * When interpolation is enabled and the elapsed time falls between two keyframes,
+     * the returned frame is a per-pixel blend of the adjacent keyframes using
+     * {@link PixelBuffer#lerp(PixelBuffer, PixelBuffer, float)}.
+     *
+     * @param elapsedMs the elapsed time since animation start in milliseconds
+     * @param interpolate whether to blend between keyframes
+     * @return the resolved frame and whether it was synthesized
+     */
+    public @NotNull FrameAtTimeResult getFrameAtTime(long elapsedMs, boolean interpolate) {
+        if (this.frames.isEmpty())
+            throw new IllegalStateException("Animation does not contain frames");
+
+        if (this.totalDurationMs <= 0)
+            return new FrameAtTimeResult(this.frames.getFirst(), false);
+
+        int normalized = (int) (elapsedMs % this.totalDurationMs);
+        int accumulated = 0;
+
+        for (int index = 0; index < this.frames.size(); index++) {
+            ImageFrame frame = this.frames.get(index);
+            int duration = Math.max(frame.getDelayMs(), MIN_FRAME_DURATION_MS);
+            int nextAccumulated = accumulated + duration;
+
+            if (normalized < nextAccumulated) {
+                if (!interpolate || this.frames.size() == 1)
+                    return new FrameAtTimeResult(frame, false);
+
+                int spanWithinFrame = normalized - accumulated;
+                if (spanWithinFrame <= 0)
+                    return new FrameAtTimeResult(frame, false);
+
+                double progress = spanWithinFrame / (double) duration;
+                if (progress <= 0d)
+                    return new FrameAtTimeResult(frame, false);
+
+                int nextIndex = (index + 1) % this.frames.size();
+                if (progress >= 0.999d)
+                    return new FrameAtTimeResult(this.frames.get(nextIndex), false);
+
+                ImageFrame nextFrame = this.frames.get(nextIndex);
+                PixelBuffer blended = PixelBuffer.lerp(
+                    PixelBuffer.wrap(frame.getImage()),
+                    PixelBuffer.wrap(nextFrame.getImage()),
+                    (float) progress
+                );
+                ImageFrame interpolatedFrame = ImageFrame.of(blended.toBufferedImage(), frame.getDelayMs());
+                return new FrameAtTimeResult(interpolatedFrame, true);
+            }
+
+            accumulated = nextAccumulated;
+        }
+
+        return new FrameAtTimeResult(this.frames.getLast(), false);
     }
 
     /**
@@ -131,10 +188,21 @@ public class AnimatedImageData implements ImageData {
             int w = this.width > 0 ? this.width : first.getImage().getWidth();
             int h = this.height > 0 ? this.height : first.getImage().getHeight();
             boolean alpha = first.getImage().getColorModel().hasAlpha();
+            int totalDuration = this.frames.stream()
+                .mapToInt(frame -> Math.max(frame.getDelayMs(), MIN_FRAME_DURATION_MS))
+                .sum();
 
-            return new AnimatedImageData(w, h, alpha, this.frames, this.loopCount, this.backgroundColor);
+            return new AnimatedImageData(w, h, alpha, this.frames, this.loopCount, this.backgroundColor, totalDuration);
         }
 
     }
+
+    /**
+     * The result of resolving a frame at a specific point in time.
+     *
+     * @param frame the resolved frame
+     * @param interpolated whether the frame was synthesized by blending two keyframes
+     */
+    public record FrameAtTimeResult(@NotNull ImageFrame frame, boolean interpolated) {}
 
 }
