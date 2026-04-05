@@ -1,4 +1,4 @@
-package dev.sbs.api.io.image.codec.webp;
+package dev.simplified.image.codec.webp;
 
 import org.jetbrains.annotations.NotNull;
 

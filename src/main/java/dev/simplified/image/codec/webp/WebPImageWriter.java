@@ -1,15 +1,15 @@
-package dev.sbs.api.io.image.codec.webp;
+package dev.simplified.image.codec.webp;
 
-import dev.sbs.api.SimplifiedApi;
-import dev.sbs.api.collection.concurrent.Concurrent;
-import dev.sbs.api.collection.concurrent.ConcurrentList;
-import dev.sbs.api.io.image.AnimatedImageData;
-import dev.sbs.api.io.image.ImageData;
-import dev.sbs.api.io.image.ImageFormat;
-import dev.sbs.api.io.image.ImageFrame;
-import dev.sbs.api.io.image.PixelBuffer;
-import dev.sbs.api.io.image.codec.ImageWriteOptions;
-import dev.sbs.api.io.image.codec.ImageWriter;
+
+import dev.simplified.collection.concurrent.Concurrent;
+import dev.simplified.collection.concurrent.ConcurrentList;
+import dev.simplified.image.AnimatedImageData;
+import dev.simplified.image.ImageData;
+import dev.simplified.image.ImageFormat;
+import dev.simplified.image.ImageFrame;
+import dev.simplified.image.PixelBuffer;
+import dev.simplified.image.codec.ImageWriteOptions;
+import dev.simplified.image.codec.ImageWriter;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -96,7 +96,7 @@ public class WebPImageWriter implements ImageWriter {
             var futures = frames.stream()
                 .map(frame -> CompletableFuture.supplyAsync(
                     () -> encodeFrame(frame, lossless, quality),
-                    SimplifiedApi.getScheduler()
+                    java.util.concurrent.Executors.newVirtualThreadPerTaskExecutor()
                 ))
                 .collect(Concurrent.toList());
             encodedPayloads = futures.stream()

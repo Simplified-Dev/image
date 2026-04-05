@@ -1,9 +1,9 @@
-package dev.sbs.api.io.image.codec.webp;
+package dev.simplified.image.codec.webp;
 
-import dev.sbs.api.collection.concurrent.Concurrent;
-import dev.sbs.api.collection.concurrent.ConcurrentList;
-import dev.sbs.api.io.image.exception.ImageDecodeException;
-import dev.sbs.api.io.image.exception.ImageEncodeException;
+import dev.simplified.collection.concurrent.Concurrent;
+import dev.simplified.collection.concurrent.ConcurrentList;
+import dev.simplified.image.exception.ImageDecodeException;
+import dev.simplified.image.exception.ImageEncodeException;
 import org.jetbrains.annotations.NotNull;
 
 /**

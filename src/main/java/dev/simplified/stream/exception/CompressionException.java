@@ -1,6 +1,6 @@
-package dev.sbs.api.io.stream.exception;
+package dev.simplified.stream.exception;
 
-import dev.sbs.api.io.exception.IoException;
+import dev.simplified.exception.IoException;
 import org.intellij.lang.annotations.PrintFormat;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;

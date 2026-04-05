@@ -1,6 +1,6 @@
-package dev.sbs.api.io.image.codec.jpeg;
+package dev.simplified.image.codec.jpeg;
 
-import dev.sbs.api.io.image.codec.ImageWriteOptions;
+import dev.simplified.image.codec.ImageWriteOptions;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;

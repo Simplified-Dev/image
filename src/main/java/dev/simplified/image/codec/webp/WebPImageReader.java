@@ -1,18 +1,18 @@
-package dev.sbs.api.io.image.codec.webp;
+package dev.simplified.image.codec.webp;
 
-import dev.sbs.api.collection.concurrent.Concurrent;
-import dev.sbs.api.collection.concurrent.ConcurrentList;
-import dev.sbs.api.io.image.AnimatedImageData;
-import dev.sbs.api.io.image.ImageData;
-import dev.sbs.api.io.image.ImageFormat;
-import dev.sbs.api.io.image.ImageFrame;
-import dev.sbs.api.io.image.ImageFrame.Blend;
-import dev.sbs.api.io.image.ImageFrame.Disposal;
-import dev.sbs.api.io.image.PixelBuffer;
-import dev.sbs.api.io.image.StaticImageData;
-import dev.sbs.api.io.image.codec.ImageReadOptions;
-import dev.sbs.api.io.image.codec.ImageReader;
-import dev.sbs.api.io.image.exception.ImageDecodeException;
+import dev.simplified.collection.concurrent.Concurrent;
+import dev.simplified.collection.concurrent.ConcurrentList;
+import dev.simplified.image.AnimatedImageData;
+import dev.simplified.image.ImageData;
+import dev.simplified.image.ImageFormat;
+import dev.simplified.image.ImageFrame;
+import dev.simplified.image.ImageFrame.Blend;
+import dev.simplified.image.ImageFrame.Disposal;
+import dev.simplified.image.PixelBuffer;
+import dev.simplified.image.StaticImageData;
+import dev.simplified.image.codec.ImageReadOptions;
+import dev.simplified.image.codec.ImageReader;
+import dev.simplified.image.exception.ImageDecodeException;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 

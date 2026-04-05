@@ -1,10 +1,10 @@
-package dev.sbs.api.io.image.codec.jpeg;
+package dev.simplified.image.codec.jpeg;
 
-import dev.sbs.api.io.image.ImageData;
-import dev.sbs.api.io.image.ImageFormat;
-import dev.sbs.api.io.image.codec.ImageWriteOptions;
-import dev.sbs.api.io.image.codec.ImageWriter;
-import dev.sbs.api.io.stream.ByteArrayDataOutput;
+import dev.simplified.image.ImageData;
+import dev.simplified.image.ImageFormat;
+import dev.simplified.image.codec.ImageWriteOptions;
+import dev.simplified.image.codec.ImageWriter;
+import dev.simplified.stream.ByteArrayDataOutput;
 import lombok.Cleanup;
 import lombok.SneakyThrows;
 import org.jetbrains.annotations.NotNull;

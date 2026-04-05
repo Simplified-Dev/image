@@ -1,4 +1,4 @@
-package dev.sbs.api.io.image.exception;
+package dev.simplified.image.exception;
 
 import org.intellij.lang.annotations.PrintFormat;
 import org.jetbrains.annotations.NotNull;

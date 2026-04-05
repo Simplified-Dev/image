@@ -1,0 +1,9 @@
+[versions]
+lombok = "1.18.36"
+annotations = "26.0.2"
+log4j2 = "2.25.3"
+
+[libraries]
+lombok = { group = "org.projectlombok", name = "lombok", version.ref = "lombok" }
+annotations = { group = "org.jetbrains", name = "annotations", version.ref = "annotations" }
+log4j2-api = { group = "org.apache.logging.log4j", name = "log4j-api", version.ref = "log4j2" }

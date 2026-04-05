@@ -1,4 +1,4 @@
-package dev.sbs.api.io.stream;
+package dev.simplified.stream;
 
 import lombok.SneakyThrows;
 import org.jetbrains.annotations.NotNull;

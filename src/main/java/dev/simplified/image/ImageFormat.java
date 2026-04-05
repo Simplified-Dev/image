@@ -1,6 +1,6 @@
-package dev.sbs.api.io.image;
+package dev.simplified.image;
 
-import dev.sbs.api.io.image.exception.UnsupportedFormatException;
+import dev.simplified.image.exception.UnsupportedFormatException;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.jetbrains.annotations.NotNull;

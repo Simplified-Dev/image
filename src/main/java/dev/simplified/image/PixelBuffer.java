@@ -1,4 +1,4 @@
-package dev.sbs.api.io.image;
+package dev.simplified.image;
 
 import lombok.AccessLevel;
 import lombok.Getter;

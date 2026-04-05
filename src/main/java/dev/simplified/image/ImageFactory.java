@@ -1,28 +1,28 @@
-package dev.sbs.api.io.image;
+package dev.simplified.image;
 
-import dev.sbs.api.SimplifiedApi;
-import dev.sbs.api.collection.concurrent.Concurrent;
-import dev.sbs.api.collection.concurrent.ConcurrentList;
-import dev.sbs.api.io.image.codec.ImageReadOptions;
-import dev.sbs.api.io.image.codec.ImageReader;
-import dev.sbs.api.io.image.codec.ImageWriteOptions;
-import dev.sbs.api.io.image.codec.ImageWriter;
-import dev.sbs.api.io.image.codec.bmp.BmpImageReader;
-import dev.sbs.api.io.image.codec.bmp.BmpImageWriter;
-import dev.sbs.api.io.image.codec.gif.GifImageReader;
-import dev.sbs.api.io.image.codec.gif.GifImageWriter;
-import dev.sbs.api.io.image.codec.jpeg.JpegImageReader;
-import dev.sbs.api.io.image.codec.jpeg.JpegImageWriter;
-import dev.sbs.api.io.image.codec.png.PngImageReader;
-import dev.sbs.api.io.image.codec.png.PngImageWriter;
-import dev.sbs.api.io.image.codec.webp.WebPImageReader;
-import dev.sbs.api.io.image.codec.webp.WebPImageWriter;
-import dev.sbs.api.io.image.exception.ImageDecodeException;
-import dev.sbs.api.io.image.exception.ImageException;
-import dev.sbs.api.io.image.exception.UnsupportedFormatException;
-import dev.sbs.api.io.stream.ByteArrayDataOutput;
-import dev.sbs.api.util.StringUtil;
-import dev.sbs.api.util.SystemUtil;
+
+import dev.simplified.collection.concurrent.Concurrent;
+import dev.simplified.collection.concurrent.ConcurrentList;
+import dev.simplified.image.codec.ImageReadOptions;
+import dev.simplified.image.codec.ImageReader;
+import dev.simplified.image.codec.ImageWriteOptions;
+import dev.simplified.image.codec.ImageWriter;
+import dev.simplified.image.codec.bmp.BmpImageReader;
+import dev.simplified.image.codec.bmp.BmpImageWriter;
+import dev.simplified.image.codec.gif.GifImageReader;
+import dev.simplified.image.codec.gif.GifImageWriter;
+import dev.simplified.image.codec.jpeg.JpegImageReader;
+import dev.simplified.image.codec.jpeg.JpegImageWriter;
+import dev.simplified.image.codec.png.PngImageReader;
+import dev.simplified.image.codec.png.PngImageWriter;
+import dev.simplified.image.codec.webp.WebPImageReader;
+import dev.simplified.image.codec.webp.WebPImageWriter;
+import dev.simplified.image.exception.ImageDecodeException;
+import dev.simplified.image.exception.ImageException;
+import dev.simplified.image.exception.UnsupportedFormatException;
+import dev.simplified.stream.ByteArrayDataOutput;
+import dev.simplified.util.StringUtil;
+import dev.simplified.util.SystemUtil;
 import lombok.Getter;
 import lombok.SneakyThrows;
 import org.jetbrains.annotations.NotNull;
@@ -342,7 +342,7 @@ public class ImageFactory {
     @SneakyThrows
     public @NotNull ConcurrentList<ImageData> fromFiles(@NotNull ConcurrentList<File> files) {
         var futures = files.stream()
-            .map(file -> CompletableFuture.supplyAsync(() -> this.fromFile(file), SimplifiedApi.getScheduler()))
+            .map(file -> CompletableFuture.supplyAsync(() -> this.fromFile(file), java.util.concurrent.Executors.newVirtualThreadPerTaskExecutor()))
             .collect(Concurrent.toList());
 
         return futures.stream()
@@ -359,7 +359,7 @@ public class ImageFactory {
      */
     public @NotNull ConcurrentList<ImageData> fromByteArrays(@NotNull ConcurrentList<byte[]> arrays) {
         var futures = arrays.stream()
-            .map(bytes -> CompletableFuture.supplyAsync(() -> this.fromByteArray(bytes), SimplifiedApi.getScheduler()))
+            .map(bytes -> CompletableFuture.supplyAsync(() -> this.fromByteArray(bytes), java.util.concurrent.Executors.newVirtualThreadPerTaskExecutor()))
             .collect(Concurrent.toList());
 
         return futures.stream()
@@ -394,7 +394,7 @@ public class ImageFactory {
         @Nullable ImageWriteOptions options
     ) {
         var futures = data.stream()
-            .map(img -> CompletableFuture.supplyAsync(() -> this.toByteArray(img, format, options), SimplifiedApi.getScheduler()))
+            .map(img -> CompletableFuture.supplyAsync(() -> this.toByteArray(img, format, options), java.util.concurrent.Executors.newVirtualThreadPerTaskExecutor()))
             .collect(Concurrent.toList());
 
         return futures.stream()
@@ -421,7 +421,7 @@ public class ImageFactory {
             int index = i;
             futures.add(CompletableFuture.runAsync(
                 () -> this.toFile(data.get(index), format, files.get(index)),
-                SimplifiedApi.getScheduler()
+                java.util.concurrent.Executors.newVirtualThreadPerTaskExecutor()
             ));
         }
 

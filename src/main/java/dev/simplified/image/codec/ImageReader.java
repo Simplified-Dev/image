@@ -1,8 +1,8 @@
-package dev.sbs.api.io.image.codec;
+package dev.simplified.image.codec;
 
-import dev.sbs.api.io.image.ImageData;
-import dev.sbs.api.io.image.ImageFormat;
-import dev.sbs.api.io.image.exception.ImageDecodeException;
+import dev.simplified.image.ImageData;
+import dev.simplified.image.ImageFormat;
+import dev.simplified.image.exception.ImageDecodeException;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 

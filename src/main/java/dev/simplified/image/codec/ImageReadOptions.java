@@ -1,4 +1,4 @@
-package dev.sbs.api.io.image.codec;
+package dev.simplified.image.codec;
 
 /**
  * Base type for format-specific image decoding options.

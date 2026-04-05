@@ -1,6 +1,6 @@
-package dev.sbs.api.io.image.codec.webp;
+package dev.simplified.image.codec.webp;
 
-import dev.sbs.api.io.image.exception.ImageDecodeException;
+import dev.simplified.image.exception.ImageDecodeException;
 import org.jetbrains.annotations.NotNull;
 
 /**

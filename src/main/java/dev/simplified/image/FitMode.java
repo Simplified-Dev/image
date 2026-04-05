@@ -1,4 +1,4 @@
-package dev.sbs.api.io.image;
+package dev.simplified.image;
 
 /**
  * Defines how animation frames are fitted onto a target canvas during normalization.

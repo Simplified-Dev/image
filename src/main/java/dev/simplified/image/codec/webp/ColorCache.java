@@ -1,4 +1,4 @@
-package dev.sbs.api.io.image.codec.webp;
+package dev.simplified.image.codec.webp;
 
 /**
  * A power-of-2 hash table of recently used ARGB pixel values for VP8L

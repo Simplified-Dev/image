@@ -1,6 +1,6 @@
-package dev.sbs.api.io.image.codec.webp;
+package dev.simplified.image.codec.webp;
 
-import dev.sbs.api.io.image.codec.ImageWriteOptions;
+import dev.simplified.image.codec.ImageWriteOptions;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;

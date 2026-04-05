@@ -1,7 +1,7 @@
-package dev.sbs.api.io.image.codec.webp;
+package dev.simplified.image.codec.webp;
 
-import dev.sbs.api.io.image.PixelBuffer;
-import dev.sbs.api.io.image.exception.ImageEncodeException;
+import dev.simplified.image.PixelBuffer;
+import dev.simplified.image.exception.ImageEncodeException;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.HashSet;
